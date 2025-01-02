@@ -5,27 +5,65 @@ import com.parkit.parkingsystem.model.Ticket;
 
 public class FareCalculatorService {
 
-    public void calculateFare(Ticket ticket){
-        if( (ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime())) ){
-            throw new IllegalArgumentException("Out time provided is incorrect:"+ticket.getOutTime().toString());
+    public void calculateFare(Ticket ticket) {
+        if ((ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime()))) {
+            throw new IllegalArgumentException("Out time provided is incorrect:" + ticket.getOutTime().toString());
         }
-
-        long inHour = ticket.getInTime().getTime();    //getTime pour obtenir tout le temps et pas seulemeent les heures
-        long outHour = ticket.getOutTime().getTime();
+        double CAR_RATE_PER_MINUTES = Fare.CAR_RATE_PER_HOUR / 60;
+        double BIKE_RATE_PER_MINUTES = Fare.BIKE_RATE_PER_HOUR / 60;
+        long inTime = ticket.getInTime().getTime();
+        System.out.println("inTime = " + inTime);
+        long outTime = ticket.getOutTime().getTime();
+        System.out.println("outTime = " + outTime);
 
         //TODO: Some tests are failing here. Need to check if this logic is correct
-        double duration = (double) (outHour - inHour) / (1000*60*60); //temps n'était pas convertit en milli mais restait en heure + en nombre entier = problème
+        double duration = (double) (outTime - inTime) / (1000 * 60); //duration in minute
+        System.out.println("duration = " + duration);
+        boolean discount = ticket.isRegularCustomer();
+        System.out.println("Parking Type: " + ticket.getParkingSpot().getParkingType());
+        switch (ticket.getParkingSpot().getParkingType()) {
+            /** logger.info("Create DB connection");
+             try {
+             Class.forName("com.mysql.cj.jdbc.Driver");
+             return DriverManager.getConnection(
+             "jdbc:mysql://localhost:3306/prod?useSSL=false&serverTimezone=Europe/Paris&characterEncoding=UTF-8","root","rootroot");
+             } catch (ClassNotFoundException | SQLException e) {
+             throw new RuntimeException(e);
+             }
+             **/
 
-        switch (ticket.getParkingSpot().getParkingType()){
             case CAR: {
-                ticket.setPrice(duration * Fare.CAR_RATE_PER_HOUR);
+                if (duration <= 30) {
+                    ticket.setPrice(0);
+                }
+                else {
+                    if (ticket.isRegularCustomer()) {
+                        ticket.setPrice((duration - 30) * (CAR_RATE_PER_MINUTES * 0.95));
+                    } else {
+                        ticket.setPrice((duration - 30) * CAR_RATE_PER_MINUTES);
+                    }
+                }
                 break;
+
             }
             case BIKE: {
-                ticket.setPrice(duration * Fare.BIKE_RATE_PER_HOUR);
-                break;
+                if (duration <= 30) {
+                    ticket.setPrice(0);
+                }
+                else {
+                    if (ticket.isRegularCustomer()) {
+                        ticket.setPrice((duration - 30) * (BIKE_RATE_PER_MINUTES * 0.95));
+                    } else {
+                        ticket.setPrice((duration - 30) * BIKE_RATE_PER_MINUTES);
+                    }
+                }
+                    break;
+
+
             }
-            default: throw new IllegalArgumentException("Unkown Parking Type");
+            default:
+                throw new IllegalArgumentException("Unkown Parking Type: " + ticket.getParkingSpot().getParkingType());
         }
+
     }
 }

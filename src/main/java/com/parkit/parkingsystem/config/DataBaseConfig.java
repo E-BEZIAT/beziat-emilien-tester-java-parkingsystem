@@ -13,7 +13,7 @@ public class DataBaseConfig {
         logger.info("Create DB connection");
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/prod?useSSL=false&serverTimezone=Europe/Paris&characterEncoding=UTF-8","root","rootroot");
+                "jdbc:mysql://localhost:3306/prod?useSSL=false&serverTimezone=Europe/Paris&characterEncoding=UTF-8&allowPublicKeyRetrieval=true","root","rootroot");
         // Problème avec le fuseau horaire, ajout dans l'URL de la time zone de paris
     }
 

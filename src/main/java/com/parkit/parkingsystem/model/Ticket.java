@@ -6,10 +6,14 @@ import java.util.Date;
 public class Ticket {
     private int id;
     private ParkingSpot parkingSpot;
-    private String vehicleRegNumber;
+    public static String vehicleRegNumber;
     private double price;
     private Date inTime;
     private Date outTime;
+    private boolean regularCustomer;
+    public boolean isRegularCustomer() {
+        return regularCustomer;
+    }
 
     public int getId() {
         return id;
@@ -58,4 +62,8 @@ public class Ticket {
     public void setOutTime(Date outTime) {
         this.outTime = outTime;
     }
+
+    public boolean getRegularCustomer() { return regularCustomer; }
+
+    public boolean setRegularCustomer(boolean regularCustomer) { this.regularCustomer = regularCustomer; return true; }
 }
