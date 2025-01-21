@@ -135,7 +135,11 @@ public class ParkingService {
             long durationInMillis = ticket.getOutTime().getTime() - ticket.getInTime().getTime();
             double durationInMinutes = durationInMillis / (1000.0 * 60.0);
 
+            logger.info("Processing exiting vehicle for ticket{}", ticket);
+
             double calculatedFare = durationInMinutes * fareCalculatorService.calculateFare(ticket);
+
+            logger.info("Calculated fare for vehicle {}: {} ", ticket.getVehicleRegNumber(), ticket.getPrice());
 
             int nbTickets = ticketDAO.getNbTicket(vehicleRegNumber);
             System.out.println("number of tickets for vehicle : " + vehicleRegNumber + " = " + nbTickets);
@@ -145,6 +149,7 @@ public class ParkingService {
                 calculatedFare *= 0.95;
                 System.out.println("Calculated fare after discount : " + calculatedFare);
             }
+            logger.info("Is regular customer: {}", ticket.isRegularCustomer());
             ticket.setPrice(calculatedFare);
             if(ticketDAO.updateTicket(ticket)) {
                 System.out.println("ticket getParkingSpot 2 : " + ticket.getParkingSpot().getId());
@@ -152,8 +157,6 @@ public class ParkingService {
                 parkingSpot.setAvailable(true);
                 System.out.println("ticket getParkingSpot 3 : " + ticket.getParkingSpot().getId());
                 parkingSpotDAO.updateParking(parkingSpot);
-                System.out.println("Please pay the parking fare:" + ticket.getPrice());
-                System.out.println("Recorded out-time for vehicle number:" + ticket.getVehicleRegNumber() + " is:" + outTime);
             }else{
                 System.out.println("Unable to update ticket information. Error occurred");
             }

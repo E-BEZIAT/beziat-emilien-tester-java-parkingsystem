@@ -3,6 +3,8 @@ package com.parkit.parkingsystem.service;
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
 
+import static com.mysql.cj.conf.PropertyKey.logger;
+
 public class FareCalculatorService {
 
     public double calculateFare(Ticket ticket) {

@@ -79,20 +79,13 @@ public class TicketDAO {
         PreparedStatement ps = null;
         try {
             con = dataBaseConfig.getConnection();
-            logger.info("Database connection established successfully.");
             ps = con.prepareStatement(DBConstants.UPDATE_TICKET);
             ps.setDouble(1, ticket.getPrice());
             ps.setTimestamp(2, new java.sql.Timestamp(ticket.getOutTime().getTime()));
             ps.setInt(3, ticket.getId());
-            logger.info("Executing updateTicket query with parameters: Price=" + ticket.getPrice() +
-                    ", OutTime=" + ticket.getOutTime() +
-                    ", VehicleRegNumber=" + ticket.getVehicleRegNumber());
-            System.out.println("UPDATE ticket SET PRICE = " + ticket.getPrice() +
-                    ", OUT_TIME = " + new Timestamp(ticket.getOutTime().getTime()) +
-                    " WHERE VEHICLE_REG_NUMBER = '" + ticket.getVehicleRegNumber() + "'");
+
             int updatedRowsCount = ps.executeUpdate();
 
-            logger.info("Update ticket query executed. Rows updated: " + updatedRowsCount);
             return (updatedRowsCount == 1);
         }catch (Exception ex){
             logger.error("Error updating ticket ",ex);

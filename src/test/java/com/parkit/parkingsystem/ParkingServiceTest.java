@@ -185,6 +185,7 @@ public class ParkingServiceTest {
 
         assertNotNull(parkingSpot);
         assertEquals(ParkingType.CAR, parkingSpot.getParkingType());
+        assertEquals(parkingSpot.getId(), 1);
         verify(parkingSpotDAO, Mockito.times(1)).getNextAvailableSlot(any(ParkingType.class));
 
     }
