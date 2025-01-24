@@ -137,6 +137,7 @@ public class ParkingService {
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
                 parkingSpot.setAvailable(true);
                 parkingSpotDAO.updateParking(parkingSpot);
+                System.out.println("Thank you for your trust, please pay the parking fare:" + ticket.getPrice());
             }else{
                 System.out.println("Unable to update ticket information. Error occurred");
             }

@@ -17,9 +17,7 @@ public class FareCalculatorService {
         double CAR_RATE_PER_MINUTES = Fare.CAR_RATE_PER_HOUR / 60;
         double BIKE_RATE_PER_MINUTES = Fare.BIKE_RATE_PER_HOUR / 60;
         long inTime = ticket.getInTime().getTime();
-        System.out.println("inTime = " + inTime);
         long outTime = ticket.getOutTime().getTime();
-        System.out.println("outTime = " + outTime);
 
         double duration = (double) (outTime - inTime) / (1000 * 60); //duration in minute
         System.out.println("duration = " + duration);
@@ -29,6 +27,7 @@ public class FareCalculatorService {
             case CAR: {
                 if (duration <= 30) {
                     ticket.setPrice(0);
+                    return 0.0;
                 }
                 else {
                     if (ticket.isRegularCustomer()) {
