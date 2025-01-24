@@ -3,9 +3,12 @@ package com.parkit.parkingsystem.service;
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
 
-import static com.mysql.cj.conf.PropertyKey.logger;
-
 public class FareCalculatorService {
+    /**
+     * Calculate the price with the duration time
+     * @param ticket
+     * @return
+     */
 
     public double calculateFare(Ticket ticket) {
         if ((ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime()))) {
@@ -18,22 +21,11 @@ public class FareCalculatorService {
         long outTime = ticket.getOutTime().getTime();
         System.out.println("outTime = " + outTime);
 
-        //TODO: Some tests are failing here. Need to check if this logic is correct
         double duration = (double) (outTime - inTime) / (1000 * 60); //duration in minute
         System.out.println("duration = " + duration);
         boolean discount = ticket.isRegularCustomer();
         System.out.println("Parking Type: " + ticket.getParkingSpot().getParkingType());
         switch (ticket.getParkingSpot().getParkingType()) {
-            /** logger.info("Create DB connection");
-             try {
-             Class.forName("com.mysql.cj.jdbc.Driver");
-             return DriverManager.getConnection(
-             "jdbc:mysql://localhost:3306/prod?useSSL=false&serverTimezone=Europe/Paris&characterEncoding=UTF-8","root","rootroot");
-             } catch (ClassNotFoundException | SQLException e) {
-             throw new RuntimeException(e);
-             }
-             **/
-
             case CAR: {
                 if (duration <= 30) {
                     ticket.setPrice(0);
@@ -46,7 +38,6 @@ public class FareCalculatorService {
                     }
                 }
                 break;
-
             }
             case BIKE: {
                 if (duration <= 30) {
@@ -60,13 +51,10 @@ public class FareCalculatorService {
                     }
                 }
                     break;
-
-
             }
             default:
                 throw new IllegalArgumentException("Unkown Parking Type: " + ticket.getParkingSpot().getParkingType());
         }
-
         return CAR_RATE_PER_MINUTES;
     }
 }

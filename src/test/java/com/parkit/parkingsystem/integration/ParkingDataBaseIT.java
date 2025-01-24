@@ -18,18 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.Date;
-
-import static com.mysql.cj.conf.PropertyKey.logger;
-import static org.apache.commons.lang.BooleanUtils.isFalse;
-import static org.apache.commons.lang.BooleanUtils.isTrue;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ParkingDataBaseIT {
-
 
     private static DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
     private static ParkingSpotDAO parkingSpotDAO;
@@ -50,7 +43,7 @@ public class ParkingDataBaseIT {
 
     @BeforeEach
     private void setUpPerTest() throws Exception {
-        Mockito.lenient().when(inputReaderUtil.readSelection()).thenReturn(1); //2 solutions, ajouter lenient avant when ou lancer mokito avec la commande @RunWith(MockitoJUnitRunner.Silent.class)
+        Mockito.lenient().when(inputReaderUtil.readSelection()).thenReturn(1);
         Mockito.lenient().when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
         dataBasePrepareService.clearDataBaseEntries();
     }
@@ -62,88 +55,99 @@ public class ParkingDataBaseIT {
 
     @Test
     public void testParkingACar(){
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
-        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
-        Ticket ticket = new Ticket();
+
+        //GIVEN
+
+        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO); // Initialize parking service
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false); // Create car parking spot
+        Ticket ticket = new Ticket(); // Create ticket with vehicle details
         ticket.setVehicleRegNumber("ABCDEF");
         ticket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR,false));
-        ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000)));
-        ticket.setOutTime(null);
+        ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000))); // Set parking entry time to 1 hour ago
+        ticket.setOutTime(null); // Initialize ticket status
         ticket.setPrice(0);
 
-        parkingService.processIncomingVehicle();
-        boolean isSaved = ticketDAO.saveTicket(ticket);
-        Ticket retrievedTicket = ticketDAO.getTicket(ticket.getVehicleRegNumber());
+        //WHEN
 
-        assertTrue(isSaved);
-        assertNotNull(parkingSpot);
+        parkingService.processIncomingVehicle(); // Process incoming vehicle in parking service
+        boolean isSaved = ticketDAO.saveTicket(ticket); // Save ticket to database
+        Ticket retrievedTicket = ticketDAO.getTicket(ticket.getVehicleRegNumber()); // Retrieve ticket using vehicle registration number
+
+        //THEN
+
+        assertTrue(isSaved); // Verify ticket was successfully saved
+        assertNotNull(parkingSpot); // Check objects are not null
         assertNotNull(retrievedTicket);
         assertNotNull(ticket);
-        assertEquals(null, retrievedTicket.getOutTime());
+        assertEquals(null, retrievedTicket.getOutTime()); // Validate ticket properties
         assertEquals(0, retrievedTicket.getPrice());
         assertEquals("ABCDEF", retrievedTicket.getVehicleRegNumber());
         assertEquals(ParkingType.CAR, retrievedTicket.getParkingSpot().getParkingType());
-
-        //TODO: check that a ticket is actualy saved in DB and Parking table is updated with availability
     }
 
     @Test
     public void testParkingLotExit(){
-        Ticket ticket = new Ticket();
+
+        //GIVEN
+
+        Ticket ticket = new Ticket(); // Create ticket
         ticket.setVehicleRegNumber("ABCDEF");
         ticket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR,false));
-        ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000)));
+        ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000))); // Set ticket timestamps and initial status
         ticket.setOutTime(null);
         ticket.setPrice(0);
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
-
+        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO); // Initialize parking service and save ticket
         boolean isSaved = ticketDAO.saveTicket(ticket);
 
-        parkingService.processExitingVehicle();
-        ticketDAO.saveTicket(ticket);
-        Ticket retrievedTicket = ticketDAO.getTicket(ticket.getVehicleRegNumber());
+        //WHEN
 
-        assertTrue(isSaved);
+        parkingService.processExitingVehicle(); // Process vehicle exit
+        ticketDAO.saveTicket(ticket); // Update ticket in database
+        Ticket retrievedTicket = ticketDAO.getTicket(ticket.getVehicleRegNumber()); // Retrieve updated ticket
+
+        //THEN
+
+        assertTrue(isSaved); // Verify ticket saved and ticket details
         assertNotNull(retrievedTicket);
         assertNotNull(ticket);
-        assertTrue(retrievedTicket.getPrice() > 0);
+        assertTrue(retrievedTicket.getPrice() > 0); // Check ticket pricing and timestamp
         assertNotNull(retrievedTicket.getOutTime());
         assertEquals(Fare.CAR_RATE_PER_HOUR, retrievedTicket.getPrice(), 0.01);
-        assertEquals(1, parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR));
+        assertEquals(1, parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR)); // Validate parking spot and registration
         assertEquals("ABCDEF", retrievedTicket.getVehicleRegNumber());
-
-
-
-        //TODO: check that the fare generated and out time are populated correctly in the database
     }
 
 
     @Test
     public void testParkingLotExitRecurringUser() throws Exception{
 
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+        //GIVEN
 
+        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO); // Initialize parking service
         parkingService.processIncomingVehicle();
-
-        Ticket ticket = new Ticket();
+        Ticket ticket = new Ticket(); // Create and configure ticket
         ticket.setVehicleRegNumber("ABCDEF");
         ticket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR,false));
         ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000)));
         ticket.setOutTime(new Date());
         ticket.setPrice(0);
         ticket.setRegularCustomer(true);
-        ticketDAO.saveTicket(ticket);
+        ticketDAO.saveTicket(ticket); // Save ticket
 
-        double expectedFare = Math.round(Fare.CAR_RATE_PER_HOUR * 0.95);
+        //WHEN
+
+        double expectedFare = Math.round(Fare.CAR_RATE_PER_HOUR * 0.95); // Calculate discounted fare for regular customers
         boolean isRegularCustomer = ticketDAO.getNbTicket(ticket.getVehicleRegNumber()) >= 1;
         if (isRegularCustomer) {
             ticket.setPrice(expectedFare);
         }
-        parkingService.processExitingVehicle();
+        parkingService.processExitingVehicle(); // Process vehicle exit and save ticket
         boolean isSaved = ticketDAO.saveTicket(ticket);
         Ticket retrievedTicket = ticketDAO.getTicket(ticket.getVehicleRegNumber());
 
-        assertTrue(isRegularCustomer);
+        //THEN
+
+        assertTrue(isRegularCustomer); // Verify ticket details and regular customer status
         assertNotNull(retrievedTicket);
         assertTrue(isSaved, "le ticket n'est pas sauvegardé correctement");
         assertTrue(ticketDAO.getNbTicket(ticket.getVehicleRegNumber()) >= 1);

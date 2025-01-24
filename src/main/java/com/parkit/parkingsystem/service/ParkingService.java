@@ -8,11 +8,8 @@ import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.util.InputReaderUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.sql.SQLException;
 import java.util.Date;
-
-import static com.parkit.parkingsystem.model.Ticket.vehicleRegNumber;
 
 public class ParkingService {
 
@@ -35,8 +32,6 @@ public class ParkingService {
             ParkingSpot parkingSpot = getNextParkingNumberIfAvailable();
             if(parkingSpot != null && parkingSpot.getId() > 0) {
                 String vehicleRegNumber = getVehichleRegNumber();
-                System.out.println("parking spot 1 : " + parkingSpot);
-
                 int nbTicket = ticketDAO.getNbTicket(vehicleRegNumber);
                 boolean isRegularCustomer = nbTicket >= 1;
                 if (isRegularCustomer) {
@@ -83,7 +78,6 @@ public class ParkingService {
         ParkingSpot parkingSpot = null;
         ParkingType parkingType = getVehichleType();
         try{
-
             parkingNumber = parkingSpotDAO.getNextAvailableSlot(parkingType);
             if(parkingNumber > 0){
                 parkingSpot = new ParkingSpot(parkingNumber,parkingType, true);
@@ -123,9 +117,7 @@ public class ParkingService {
         try{
             String vehicleRegNumber = getVehichleRegNumber();
             System.out.println("Exiting vehicle with register number "+vehicleRegNumber);
-
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
-            System.out.println("ticket getParkingSpot 1 : " + ticket.getParkingSpot().getId());
             if (ticket == null) {
                 System.out.println("No ticket found for vehicle number: " + vehicleRegNumber);
                 return;
@@ -134,28 +126,16 @@ public class ParkingService {
             ticket.setOutTime(outTime);
             long durationInMillis = ticket.getOutTime().getTime() - ticket.getInTime().getTime();
             double durationInMinutes = durationInMillis / (1000.0 * 60.0);
-
-            logger.info("Processing exiting vehicle for ticket{}", ticket);
-
             double calculatedFare = durationInMinutes * fareCalculatorService.calculateFare(ticket);
-
-            logger.info("Calculated fare for vehicle {}: {} ", ticket.getVehicleRegNumber(), ticket.getPrice());
-
             int nbTickets = ticketDAO.getNbTicket(vehicleRegNumber);
-            System.out.println("number of tickets for vehicle : " + vehicleRegNumber + " = " + nbTickets);
             boolean isRecurringUser = nbTickets > 1;
             if(isRecurringUser){
-                System.out.println("Is recurring user : " + isRecurringUser);
                 calculatedFare *= 0.95;
-                System.out.println("Calculated fare after discount : " + calculatedFare);
             }
-            logger.info("Is regular customer: {}", ticket.isRegularCustomer());
             ticket.setPrice(calculatedFare);
             if(ticketDAO.updateTicket(ticket)) {
-                System.out.println("ticket getParkingSpot 2 : " + ticket.getParkingSpot().getId());
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
                 parkingSpot.setAvailable(true);
-                System.out.println("ticket getParkingSpot 3 : " + ticket.getParkingSpot().getId());
                 parkingSpotDAO.updateParking(parkingSpot);
             }else{
                 System.out.println("Unable to update ticket information. Error occurred");

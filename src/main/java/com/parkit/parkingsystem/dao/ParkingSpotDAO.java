@@ -17,6 +17,7 @@ public class ParkingSpotDAO {
     public DataBaseConfig dataBaseConfig = new DataBaseConfig();
 
     public int getNextAvailableSlot(ParkingType parkingType) {
+
         Connection con = null;
         int result = -1;
         PreparedStatement ps = null;
@@ -42,11 +43,10 @@ public class ParkingSpotDAO {
     }
 
     public boolean updateParking(ParkingSpot parkingSpot) {
-        //update the availability fo that parking slot
+
         Connection con = null;
         PreparedStatement ps = null;
         boolean isUpdated = false;
-
         try {
             con = dataBaseConfig.getConnection();
             ps = con.prepareStatement(DBConstants.UPDATE_PARKING_SPOT);
