@@ -11,6 +11,7 @@ import com.parkit.parkingsystem.util.InputReaderUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.commons.logging.Logger;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -22,14 +23,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ParkingServiceTest {
 
+    @Mock
     private static ParkingService parkingService;
-
     @Mock
     private static InputReaderUtil inputReaderUtil;
     @Mock
     private static ParkingSpotDAO parkingSpotDAO;
     @Mock
     private static TicketDAO ticketDAO;
+    @Mock
+    private Logger logger;
 
     @BeforeEach
     public void setUpPerTest() {
@@ -56,6 +59,7 @@ public class ParkingServiceTest {
         //GIVEN
 
         Ticket ticket = new Ticket(); // Create ticket with vehicle details
+        ticket.setId(123);
         ticket.setVehicleRegNumber("ABCDEF");
         ticket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR,false));
         ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000))); // Set ticket timestamps and initial status
@@ -77,6 +81,7 @@ public class ParkingServiceTest {
         ArgumentCaptor<Ticket> ticketCaptor = ArgumentCaptor.forClass(Ticket.class);
         verify(ticketDAO).updateTicket(ticketCaptor.capture());
         Ticket updatedTicket = ticketCaptor.getValue();
+        assertEquals(123, updatedTicket.getId());
         assertNotNull(updatedTicket.getOutTime(), "heure de sortie");
         assertTrue(updatedTicket.getPrice() > 0, "prix du ticket");
         verify(parkingSpotDAO, times(1)).updateParking(any(ParkingSpot.class)); // Verify parking spot update
@@ -92,6 +97,35 @@ public class ParkingServiceTest {
     }
 
     @Test
+    public void testProcessExitingVehicleTicketNotFound(){
+
+        //WHEN
+
+        when(ticketDAO.getTicket(anyString())).thenReturn(null); // Simulate ticket is not found
+        parkingService.processExitingVehicle(); // Process vehicle exit
+
+        //THEN
+
+        verify(ticketDAO, Mockito.times(0)).updateTicket(any(Ticket.class)); // verify update ticket is not called
+        verify(parkingSpotDAO, Mockito.times(0)).updateParking(any(ParkingSpot.class)); // verify update parking is not called
+    }
+
+    @Test
+    public void testProcessExitingVehicleIfRegistrationNumbeError() throws Exception {
+
+        // WHEN
+
+        when(inputReaderUtil.readVehicleRegistrationNumber())
+                .thenThrow(new IllegalArgumentException("Unable to process exiting vehicle")); // Simulate an exception when reading vehicle registration number
+        parkingService.processExitingVehicle(); // Process vehicle exit
+
+        // THEN
+
+        verify(ticketDAO, Mockito.times(0)).getTicket(anyString()); // verify getTicket don't have any interaction
+    }
+
+
+    @Test
     public void processIncomingVehicleTest() throws Exception {
 
         //GIVEN
@@ -103,6 +137,7 @@ public class ParkingServiceTest {
         ticket.setInTime(new Date(System.currentTimeMillis() - (60 * 60 * 1000))); // Set ticket timestamps and initial status
         ticket.setOutTime(null);
         ticket.setPrice(0);
+        ticket.setRegularCustomer(true);
 
         //WHEN
 
@@ -120,6 +155,8 @@ public class ParkingServiceTest {
         ArgumentCaptor<Ticket> ticketCaptor = ArgumentCaptor.forClass(Ticket.class); // Verify ticket save
         verify(ticketDAO, times(1)).saveTicket(ticketCaptor.capture());
         Ticket savedTicket = ticketCaptor.getValue();
+        assertNotNull(savedTicket);
+        assertNotNull(ticket.isRegularCustomer());
         assertNotNull(savedTicket.getInTime(), "heure d'entrée'"); // Check ticket details
         assertEquals("ABCDEF", savedTicket.getVehicleRegNumber(), "Numéro d'immatriculation incorrect");
         assertEquals(0, savedTicket.getPrice(), "Le prix initial devrait être 0");
@@ -127,6 +164,8 @@ public class ParkingServiceTest {
         verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class)); // Verify parking spot update
         ArgumentCaptor<ParkingSpot> parkingSpotCaptor = ArgumentCaptor.forClass(ParkingSpot.class);
         verify(parkingSpotDAO).updateParking(parkingSpotCaptor.capture());
+        assertFalse(parkingSpotCaptor.getValue().isAvailable());
+        assertEquals(ParkingType.CAR, parkingSpotCaptor.getValue().getParkingType());
         verify(ticketDAO, Mockito.times(1)).getNbTicket("ABCDEF"); // Check ticket count and apply potential discount
         if(ticketDAO.getNbTicket("ABCDEF") > 1){
             double delta = 0.001;
@@ -149,6 +188,7 @@ public class ParkingServiceTest {
 
         verify(parkingSpotDAO, times(0)).updateParking(any(ParkingSpot.class)); // Verify no updates occurred due to error
         verify(ticketDAO, Mockito.times(0)).saveTicket(any(Ticket.class));
+        assertFalse(ticketDAO.saveTicket(new Ticket()));
     }
 
     @Test
@@ -176,10 +216,11 @@ public class ParkingServiceTest {
         verify(ticketDAO, times(1)).updateTicket(ticket); // Verify ticket update attempt
         assertFalse(ticketDAO.updateTicket(ticket), "Expected ticket update to fail.");
         verify(parkingSpotDAO, never()).updateParking(any(ParkingSpot.class)); // Verify no parking spot updates
+        assertFalse(parkingSpotDAO.updateParking(any(ParkingSpot.class)), "Expected parking spot update to fail.");
     }
 
     @Test
-    public void testGetNextParkingNumberIfAvailableCAR() throws Exception {
+    public void testGetNextParkingNumberIfAvailable() throws Exception {
 
         //WHEN
 
@@ -211,16 +252,25 @@ public class ParkingServiceTest {
     }
 
     @Test
-    public void testGetNextParkingNumberIfAvailableParkingNumberWrongArgument() throws Exception {
+    public void testGetNextParkingNumberIfAvailableParkingNumberWrongArgument(){
 
         //WHEN
 
         when(inputReaderUtil.readSelection()).thenReturn(3); // Mock invalid input selection
-        assertThrows(Exception.class, () -> parkingService.getNextParkingNumberIfAvailable()); // Verify exception is thrown for invalid selection
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> { parkingService.getNextParkingNumberIfAvailable(); });
 
         //THEN
 
         verify(parkingSpotDAO, never()).getNextAvailableSlot(any(ParkingType.class)); // Verify no parking spot lookup occurs for invalid selection
+        verify(parkingSpotDAO, never()).updateParking(any(ParkingSpot.class));
+        assertEquals("Entered input is invalid", exception.getMessage());
+    }
+
+    @Test
+    //
+    public void testGetVehicleTypeInvalid() throws Exception {
+        when(inputReaderUtil.readSelection()).thenReturn(3); // invalid selection
+        assertThrows(IllegalArgumentException.class, () -> parkingService.getVehichleType());
     }
 
 }
