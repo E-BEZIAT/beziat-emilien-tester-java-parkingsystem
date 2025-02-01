@@ -265,7 +265,7 @@ public class ParkingServiceTest {
 
     @Test
     //
-    public void testGetVehicleTypeInvalid() throws Exception {
+    public void testGetVehicleTypeInvalid() {
         when(inputReaderUtil.readSelection()).thenReturn(3); // invalid selection
         assertThrows(IllegalArgumentException.class, () -> parkingService.getVehichleType());
     }

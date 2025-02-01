@@ -4,46 +4,44 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.sql.*;
 
+<span class="nc" id="L7">public class DataBaseConfig {</span>
 
-
-<span class="nc" id="L9">public class DataBaseConfig {</span>
-
-<span class="nc" id="L11">    private static final Logger logger = LogManager.getLogger(&quot;DataBaseConfig&quot;);</span>
+<span class="nc" id="L9">    private static final Logger logger = LogManager.getLogger(&quot;DataBaseConfig&quot;);</span>
 
     public Connection getConnection() throws ClassNotFoundException, SQLException {
-<span class="nc" id="L14">        Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);</span>
-<span class="nc" id="L15">        return DriverManager.getConnection(</span>
+<span class="nc" id="L12">        Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);</span>
+<span class="nc" id="L13">        return DriverManager.getConnection(</span>
                 &quot;jdbc:mysql://localhost:3306/prod?useSSL=false&amp;serverTimezone=Europe/Paris&amp;characterEncoding=UTF-8&amp;allowPublicKeyRetrieval=true&quot;,&quot;root&quot;,&quot;rootroot&quot;);
     }
 
     public void closeConnection(Connection con){
-<span class="nc bnc" id="L20" title="All 2 branches missed.">        if(con!=null){</span>
+<span class="nc bnc" id="L18" title="All 2 branches missed.">        if(con!=null){</span>
             try {
-<span class="nc" id="L22">                con.close();</span>
-<span class="nc" id="L23">            } catch (SQLException e) {</span>
-<span class="nc" id="L24">                logger.error(&quot;Error while closing connection&quot;,e);</span>
-<span class="nc" id="L25">            }</span>
+<span class="nc" id="L20">                con.close();</span>
+<span class="nc" id="L21">            } catch (SQLException e) {</span>
+<span class="nc" id="L22">                logger.error(&quot;Error while closing connection&quot;,e);</span>
+<span class="nc" id="L23">            }</span>
         }
-<span class="nc" id="L27">    }</span>
+<span class="nc" id="L25">    }</span>
 
     public void closePreparedStatement(PreparedStatement ps) {
-<span class="nc bnc" id="L30" title="All 2 branches missed.">        if(ps!=null){</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        if(ps!=null){</span>
             try {
-<span class="nc" id="L32">                ps.close();</span>
-<span class="nc" id="L33">            } catch (SQLException e) {</span>
-<span class="nc" id="L34">                logger.error(&quot;Error while closing prepared statement&quot;,e);</span>
-<span class="nc" id="L35">            }</span>
+<span class="nc" id="L30">                ps.close();</span>
+<span class="nc" id="L31">            } catch (SQLException e) {</span>
+<span class="nc" id="L32">                logger.error(&quot;Error while closing prepared statement&quot;,e);</span>
+<span class="nc" id="L33">            }</span>
         }
-<span class="nc" id="L37">    }</span>
+<span class="nc" id="L35">    }</span>
 
     public void closeResultSet(ResultSet rs) {
-<span class="nc bnc" id="L40" title="All 2 branches missed.">        if(rs!=null){</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if(rs!=null){</span>
             try {
-<span class="nc" id="L42">                rs.close();</span>
-<span class="nc" id="L43">            } catch (SQLException e) {</span>
-<span class="nc" id="L44">                logger.error(&quot;Error while closing result set&quot;,e);</span>
-<span class="nc" id="L45">            }</span>
+<span class="nc" id="L40">                rs.close();</span>
+<span class="nc" id="L41">            } catch (SQLException e) {</span>
+<span class="nc" id="L42">                logger.error(&quot;Error while closing result set&quot;,e);</span>
+<span class="nc" id="L43">            }</span>
         }
-<span class="nc" id="L47">    }</span>
+<span class="nc" id="L45">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
