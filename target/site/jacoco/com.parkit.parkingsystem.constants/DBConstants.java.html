@@ -5,7 +5,7 @@
     public static final String GET_NEXT_PARKING_SPOT = &quot;SELECT MIN(PARKING_NUMBER) FROM parking WHERE AVAILABLE = true and TYPE = ?&quot;;
     public static final String UPDATE_PARKING_SPOT = &quot;UPDATE parking SET available = ? WHERE PARKING_NUMBER = ?&quot;;
 
-    public static final String SAVE_TICKET = &quot;insert into ticket(PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME, REGULAR_CUSTOMER) values(?,?,?,?,?,?)&quot;;
+    public static final String SAVE_TICKET = &quot;insert into ticket(PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME) values(?,?,?,?,?)&quot;;
     public static final String UPDATE_TICKET = &quot;update ticket set PRICE=?, OUT_TIME=? where ID=?&quot;;
     public static final String GET_TICKET = &quot;SELECT t.ID, t.PARKING_NUMBER, t.PRICE, t.IN_TIME, t.OUT_TIME, p.TYPE FROM ticket t,parking p WHERE t.PARKING_NUMBER = p.PARKING_NUMBER AND t.VEHICLE_REG_NUMBER=? ORDER BY t.IN_TIME DESC LIMIT 1&quot;;
     public static final String GET_NB_TICKET = &quot;SELECT COUNT(*) as nbTicket FROM ticket WHERE VEHICLE_REG_NUMBER = ?&quot;;

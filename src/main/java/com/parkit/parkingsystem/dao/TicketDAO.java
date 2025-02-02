@@ -29,7 +29,6 @@ public class TicketDAO {
             ps.setDouble(3, ticket.getPrice());
             ps.setTimestamp(4, new java.sql.Timestamp(ticket.getInTime().getTime()));
             ps.setTimestamp(5, (ticket.getOutTime() == null)?null: (new java.sql.Timestamp(ticket.getOutTime().getTime())) );
-            ps.setBoolean(6,ticket.getRegularCustomer());
             return ps.executeUpdate() > 0;
         }catch (Exception ex){
             logger.error("Error saving ticket",ex);

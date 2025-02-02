@@ -15,10 +15,11 @@ public class InteractiveShell {
         System.out.println("Welcome to Parking System!");
 
         boolean continueApp = true;
+        FareCalculatorService fareCalculatorService = new FareCalculatorService();
         InputReaderUtil inputReaderUtil = new InputReaderUtil();
         ParkingSpotDAO parkingSpotDAO = new ParkingSpotDAO();
         TicketDAO ticketDAO = new TicketDAO();
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO, fareCalculatorService);
 
         while(continueApp){
             loadMenu();

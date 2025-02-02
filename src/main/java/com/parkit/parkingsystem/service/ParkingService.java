@@ -21,10 +21,11 @@ public class ParkingService {
     private ParkingSpotDAO parkingSpotDAO;
     private  TicketDAO ticketDAO;
 
-    public ParkingService(InputReaderUtil inputReaderUtil, ParkingSpotDAO parkingSpotDAO, TicketDAO ticketDAO){
+    public ParkingService(InputReaderUtil inputReaderUtil, ParkingSpotDAO parkingSpotDAO, TicketDAO ticketDAO, FareCalculatorService fareCalculatorService){
         this.inputReaderUtil = inputReaderUtil;
         this.parkingSpotDAO = parkingSpotDAO;
         this.ticketDAO = ticketDAO;
+        ParkingService.fareCalculatorService = fareCalculatorService;
     }
 
     public void processIncomingVehicle() {
@@ -33,8 +34,7 @@ public class ParkingService {
             if(parkingSpot != null && parkingSpot.getId() > 0) {
                 String vehicleRegNumber = getVehichleRegNumber();
                 int nbTicket = ticketDAO.getNbTicket(vehicleRegNumber);
-                boolean isRegularCustomer = nbTicket >= 1;
-                if (isRegularCustomer) {
+                if (nbTicket >= 1) {
                     System.out.println("Heureux de vous revoir ! En tant qu’utilisateur régulier de notre parking, vous allez obtenir une remise de 5%");
                 }
                 parkingSpot.setAvailable(false);
@@ -49,12 +49,12 @@ public class ParkingService {
                 ticket.setPrice(0);
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
-                ticket.setRegularCustomer(isRegularCustomer);
                 System.out.println("Generated Ticket and saved in DB");
                 System.out.println("Please park your vehicle in spot number:"+parkingSpot.getId());
                 System.out.println("Recorded in-time for vehicle number:"+vehicleRegNumber+" is:"+inTime);
 
-                if(!ticketDAO.saveTicket(ticket)) {
+                boolean isSaved = ticketDAO.saveTicket(ticket);
+                if(!isSaved) {
                     throw new Exception("erreur lors de la sauvegarde du ticket");
                 }
 
@@ -124,14 +124,9 @@ public class ParkingService {
             }
             Date outTime = new Date();
             ticket.setOutTime(outTime);
-            long durationInMillis = ticket.getOutTime().getTime() - ticket.getInTime().getTime();
-            double durationInMinutes = durationInMillis / (1000.0 * 60.0);
-            double calculatedFare = durationInMinutes * fareCalculatorService.calculateFare(ticket);
             int nbTickets = ticketDAO.getNbTicket(vehicleRegNumber);
             boolean isRecurringUser = nbTickets > 1;
-            if(isRecurringUser){
-                calculatedFare *= 0.95;
-            }
+            double calculatedFare = fareCalculatorService.calculateFare(ticket, isRecurringUser);
             ticket.setPrice(calculatedFare);
             if(ticketDAO.updateTicket(ticket)) {
                 ParkingSpot parkingSpot = ticket.getParkingSpot();

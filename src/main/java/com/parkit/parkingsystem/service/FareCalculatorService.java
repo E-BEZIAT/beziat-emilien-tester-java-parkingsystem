@@ -9,8 +9,11 @@ public class FareCalculatorService {
      * @param ticket
      * @return
      */
+    public void calculateFare(Ticket ticket) {
+        calculateFare(ticket, false);
+    }
 
-    public double calculateFare(Ticket ticket) {
+    public double calculateFare(Ticket ticket, boolean discount) {
         if ((ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime()))) {
             throw new IllegalArgumentException("Out time provided is incorrect:" + ticket.getOutTime().toString());
         }
@@ -21,7 +24,6 @@ public class FareCalculatorService {
 
         double duration = (double) (outTime - inTime) / (1000 * 60); //duration in minute
         System.out.println("duration = " + duration);
-        boolean discount = ticket.isRegularCustomer();
         System.out.println("Parking Type: " + ticket.getParkingSpot().getParkingType());
 
                 if (duration <= 30) {
@@ -31,15 +33,15 @@ public class FareCalculatorService {
                 else {
                     switch (ticket.getParkingSpot().getParkingType()) {
                         case CAR: {
-                            if (ticket.isRegularCustomer()) {
-                                ticket.setPrice(duration * CAR_RATE_PER_MINUTES * 0.95);
+                            if (discount) {
+                                ticket.setPrice(duration * (CAR_RATE_PER_MINUTES * 0.95));
                             } else {
                                 ticket.setPrice(duration * CAR_RATE_PER_MINUTES);
                             }
                             break;
                         }
                     case BIKE: {
-                        if (ticket.isRegularCustomer()) {
+                        if (discount) {
                             ticket.setPrice((duration) * (BIKE_RATE_PER_MINUTES * 0.95));
                         } else {
                             ticket.setPrice((duration) * BIKE_RATE_PER_MINUTES);
